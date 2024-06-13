@@ -11,7 +11,6 @@ const VideoForm = ({ addVideo }) => {
 		if (title && url) {
 			try {
 				const response = await axios.post("/api/videos", { title, src: url });
-                console.log("API Response:", response.data);
 				addVideo(response.data); 
 				setTitle("");
 				setUrl("");
