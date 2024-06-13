@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "./db.js";
+import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
@@ -40,5 +41,29 @@ router.delete("/videos/:id", async (req, res) => {
 		res.status(500).json({ error: "Internal Server Error" });
 	}
 });
+
+// Add new video
+router.post("/videos", async (req, res) => {
+	const { title, src } = req.body; 
+
+	if (!title || !src) {
+		return res.status(400).json({ error: "Missing required video data" });
+	}
+
+	const id = uuidv4(); // Generate a unique ID for the new video
+
+	try {
+		const insertResult = await db.query(
+			"INSERT INTO videos (id, title, src) VALUES ($1, $2, $3) RETURNING id",
+			[id, title, src]
+		);
+
+		res.status(201).json({ id: insertResult.rows[0].id });
+	} catch (error) {
+		console.error("Error adding new video:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+});
+
 
 export default router;
