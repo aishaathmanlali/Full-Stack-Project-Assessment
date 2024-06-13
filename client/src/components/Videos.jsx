@@ -20,6 +20,7 @@ const Videos = () => {
 	}, []);
 
 	const addVideo = (video) => {
+		console.log("Adding video:", video);
 		setVideos((prevVideos) => [...prevVideos, video]);
 	};
 

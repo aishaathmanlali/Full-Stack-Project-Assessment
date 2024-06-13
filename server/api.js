@@ -43,7 +43,7 @@ router.delete("/videos/:id", async (req, res) => {
 
 // Add new video
 router.post("/videos", async (req, res) => {
-	const { title, src } = req.body; 
+	const { title, src } = req.body;
 
 	if (!title && !src) {
 		return res.status(400).json({ error: "Missing required video data" });
@@ -51,16 +51,18 @@ router.post("/videos", async (req, res) => {
 
 	try {
 		const insertResult = await db.query(
-			"INSERT INTO videos (title, src) VALUES ($1, $2)",
+			"INSERT INTO videos (title, src) VALUES ($1, $2) RETURNING *",
 			[title, src]
 		);
 
-		res.status(201).json({ videos: insertResult.rows});
+		const newVideo = insertResult.rows[0];
+		console.log(newVideo);
+		res.status(201).json(newVideo);
+
 	} catch (error) {
 		console.error("Error adding new video:", error);
 		res.status(500).json({ error: "Internal Server Error" });
 	}
 });
-
 
 export default router;
