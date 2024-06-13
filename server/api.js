@@ -9,7 +9,6 @@ router.get("/videos", async (_, res) => {
 	console.log("api videos");
 	db.query("SELECT * FROM videos")
 		.then((result) => {
-			//console.log(result);
 			res.status(200).json({ videos: result.rows });
 		})
 		.catch((error) => {
@@ -46,19 +45,17 @@ router.delete("/videos/:id", async (req, res) => {
 router.post("/videos", async (req, res) => {
 	const { title, src } = req.body; 
 
-	if (!title || !src) {
+	if (!title && !src) {
 		return res.status(400).json({ error: "Missing required video data" });
 	}
 
-	const id = uuidv4(); // Generate a unique ID for the new video
-
 	try {
 		const insertResult = await db.query(
-			"INSERT INTO videos (id, title, src) VALUES ($1, $2, $3) RETURNING id",
-			[id, title, src]
+			"INSERT INTO videos (title, src) VALUES ($1, $2)",
+			[title, src]
 		);
 
-		res.status(201).json({ id: insertResult.rows[0].id });
+		res.status(201).json({ videos: insertResult.rows});
 	} catch (error) {
 		console.error("Error adding new video:", error);
 		res.status(500).json({ error: "Internal Server Error" });
