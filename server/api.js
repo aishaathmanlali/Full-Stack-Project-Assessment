@@ -1,5 +1,6 @@
 import { Router } from "express";
 import db from "./db.js";
+import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
@@ -8,7 +9,6 @@ router.get("/videos", async (_, res) => {
 	console.log("api videos");
 	db.query("SELECT * FROM videos")
 		.then((result) => {
-			//console.log(result);
 			res.status(200).json({ videos: result.rows });
 		})
 		.catch((error) => {
@@ -37,6 +37,30 @@ router.delete("/videos/:id", async (req, res) => {
 		res.status(204).send();
 	} catch (error) {
 		console.error("Error deleting video:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
+});
+
+// Add new video
+router.post("/videos", async (req, res) => {
+	const { title, src } = req.body;
+
+	if (!title && !src) {
+		return res.status(400).json({ error: "Missing required video data" });
+	}
+
+	try {
+		const insertResult = await db.query(
+			"INSERT INTO videos (title, src) VALUES ($1, $2) RETURNING *",
+			[title, src]
+		);
+
+		const newVideo = insertResult.rows[0];
+		console.log(newVideo);
+		res.status(201).json(newVideo);
+
+	} catch (error) {
+		console.error("Error adding new video:", error);
 		res.status(500).json({ error: "Internal Server Error" });
 	}
 });
