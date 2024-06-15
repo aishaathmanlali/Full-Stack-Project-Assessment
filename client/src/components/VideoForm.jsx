@@ -1,4 +1,3 @@
-// components/VideoForm.js
 import { useState } from 'react';
 
 const VideoForm = ({ addVideo }) => {
@@ -8,9 +7,27 @@ const VideoForm = ({ addVideo }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (title && url) {
-            addVideo({ title, src: url });
-            setTitle('');
-            setUrl('');
+            const embedUrl = convertToEmbedUrl(url);
+            if (embedUrl) {
+                addVideo({ title, src: embedUrl });
+                setTitle('');
+                setUrl('');
+            } else {
+                alert('Invalid YouTube URL. Please try again.');
+            }
+        } else {
+            alert('Please fill in all fields.');
+        }
+    };
+
+    const convertToEmbedUrl = (url) => {
+        const videoIdMatch = url.match(
+            /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+        );
+        if (videoIdMatch) {
+            return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
+        } else {
+            throw new Error('Invalid YouTube URL');
         }
     };
 
@@ -22,7 +39,7 @@ const VideoForm = ({ addVideo }) => {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Type your video"
+                    placeholder="Enter video title"
                     required
                 />
             </div>
@@ -32,11 +49,11 @@ const VideoForm = ({ addVideo }) => {
                     type="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="URL"
+                    placeholder="Enter YouTube URL"
                     required
                 />
             </div>
-            <button type="submit">Add New Video</button>
+            <button type="submit">Add Video</button>
         </form>
     );
 };

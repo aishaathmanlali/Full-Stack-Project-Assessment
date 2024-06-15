@@ -44,10 +44,21 @@ const Videos = () => {
             <ul>
                 {videos.map((video, index) => (
                     <li key={index}>
-                        <a href={video.src} target="_blank" rel="noopener noreferrer">
-                            {video.title}
-                        </a>
-                        <button onClick={() => deleteVideo(index)}>Delete</button>
+
+<div>
+                        <iframe
+                            width="560"
+                            height="315"
+                            src={video.src}
+                            title={video.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                        <p>{video.title}</p>
+                        <button onClick={() => deleteVideo(index)}>Excluir</button>
+                    </div>
+                        
                     </li>
                 ))}
             </ul>
