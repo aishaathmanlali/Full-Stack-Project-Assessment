@@ -1,11 +1,13 @@
-import { useState } from 'react';
+// components/VideoForm.js
+import { useState } from "react";
+import axios from "axios";
 
 const VideoForm = ({ addVideo }) => {
-    const [title, setTitle] = useState('');
-    const [url, setUrl] = useState('');
+	const [title, setTitle] = useState("");
+	const [url, setUrl] = useState("");
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const handleSubmit = (event) => {
+        event.preventDefault();
         if (title && url) {
             const embedUrl = convertToEmbedUrl(url);
             if (embedUrl) {
@@ -31,31 +33,33 @@ const VideoForm = ({ addVideo }) => {
         }
     };
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label>Title:</label>
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter video title"
-                    required
-                />
-            </div>
-            <div>
-                <label>YouTube URL:</label>
-                <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="Enter YouTube URL"
-                    required
-                />
-            </div>
-            <button type="submit">Add Video</button>
-        </form>
-    );
+	
+
+	return (
+		<form onSubmit={handleSubmit}>
+			<div>
+				<label>Title:</label>
+				<input
+					type="text"
+					value={title}
+					onChange={(event) => setTitle(event.target.value)}
+					placeholder="Type your video"
+					required
+				/>
+			</div>
+			<div>
+				<label>YouTube URL:</label>
+				<input
+					type="url"
+					value={url}
+					onChange={(event) => setUrl(event.target.value)}
+					placeholder="URL"
+					required
+				/>
+			</div>
+			<button type="submit">Add New Video</button>
+		</form>
+	);
 };
 
 export default VideoForm;
