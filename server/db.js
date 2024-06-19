@@ -1,21 +1,19 @@
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-if (!process.env.LAMBDA_TASK_ROOT) {
-	const __dirname = path.dirname(fileURLToPath(import.meta.url));
-	dotenv.config({ path: path.join(__dirname, "../.env") });
-}
-
 import pg from "pg";
+
+dotenv.config({ path: path.join(fileURLToPath(import.meta.url), "../.env") });
+
 const { Pool } = pg;
 
-// make sure we run automated tests against a different database to production
 const databaseUrl =
-	process.env.NODE_ENV == "test"
-		? process.env.TEST_DATABASE_URL
-		: process.env.DATABASE_URL;
-console.log(databaseUrl);
+	process.env.NODE_ENV === "test"
+		? process.env.TEST_DATABASE_URL ||
+			"postgres://fallback_username:fallback_password@localhost:5432/fallback_test_db"
+		: process.env.DATABASE_URL ||
+			"postgres://fallback_username:fallback_password@localhost:5432/fallback_db";
+
 const pool =
 	databaseUrl &&
 	new Pool({
@@ -26,7 +24,6 @@ const pool =
 				? false
 				: { rejectUnauthorized: false },
 	});
-	
 
 export const connectDb = async () => {
 	if (!pool) {
@@ -36,12 +33,13 @@ export const connectDb = async () => {
 	let client;
 	try {
 		client = await pool.connect();
+		console.log(`Postgres connected to ${client.database}`);
 	} catch (err) {
-		console.log(err);
+		console.error("Error connecting to Postgres:", err);
 		throw err;
+	} finally {
+		client && client.release();
 	}
-	console.log(`Postgres connected to ${client.database}`);
-	client.release();
 };
 
 export const disconnectDb = () => {
@@ -51,11 +49,16 @@ export const disconnectDb = () => {
 	pool.end();
 };
 
-export default {
-	query: (...args) => {
-		if (!pool) {
-			return;
-		}
-		return pool.query.apply(pool, args);
-	},
+export const query = async (...args) => {
+	if (!pool) {
+		throw new Error("Database pool not initialized");
+	}
+	const client = await pool.connect();
+	try {
+		return await client.query(...args);
+	} finally {
+		client.release();
+	}
 };
+
+export default pool;

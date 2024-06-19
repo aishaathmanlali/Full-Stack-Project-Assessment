@@ -1,12 +1,10 @@
-import "dotenv/config";
+// server.js
 
 import http from "node:http";
-import { connectDb, disconnectDb } from "./db.js";
+import { connectDb, disconnectDb } from "./db.js"; // Correct import statement
 
 import app from "./app.js";
 
-
-// after configuring the routes we can now create the node server and start it up
 const server = http.createServer(app);
 const port = parseInt(process.env.PORT ?? "3000", 10);
 
@@ -19,4 +17,3 @@ server.on("listening", () => {
 process.on("SIGTERM", () => server.close(() => disconnectDb()));
 
 connectDb().then(() => server.listen(port));
-
