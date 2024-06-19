@@ -21,8 +21,13 @@ app.use((req, res, next) => {
 	if (req.method === "GET" && !req.url.startsWith("/api")) {
 		return res.sendFile(path.join(staticDir, "index.html"));
 	}
-	console.log("Next " + next);
+	// console.log("Next " + next);
 	next();
+});
+
+app.use((err, req, res, next) => {
+	console.error(err.stack);
+	res.status(500).send("Something broke!");
 });
 
 export default app;
