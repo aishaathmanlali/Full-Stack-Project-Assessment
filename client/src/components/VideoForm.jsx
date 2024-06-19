@@ -6,19 +6,34 @@ const VideoForm = ({ addVideo }) => {
 	const [title, setTitle] = useState("");
 	const [url, setUrl] = useState("");
 
-	const handleSubmit = async (event) => {
-		event.preventDefault(); 
-		if (title && url) {
-			try {
-				const response = await axios.post("/api/videos", { title, src: url });
-				addVideo(response.data); 
-				setTitle("");
-				setUrl("");
-			} catch (error) {
-				console.error("Error adding video:", error);
-			}
-		}
-	};
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        if (title && url) {
+            const embedUrl = convertToEmbedUrl(url);
+            if (embedUrl) {
+                addVideo({ title, src: embedUrl });
+                setTitle('');
+                setUrl('');
+            } else {
+                alert('Invalid YouTube URL. Please try again.');
+            }
+        } else {
+            alert('Please fill in all fields.');
+        }
+    };
+
+    const convertToEmbedUrl = (url) => {
+        const videoIdMatch = url.match(
+            /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+        );
+        if (videoIdMatch) {
+            return `https://www.youtube.com/embed/${videoIdMatch[1]}`;
+        } else {
+            throw new Error('Invalid YouTube URL');
+        }
+    };
+
+	
 
 	return (
 		<form onSubmit={handleSubmit}>

@@ -48,6 +48,45 @@ const Videos = () => {
 			<h2>Video List</h2>
 			<VideoForm addVideo={addVideo} />
 
+<<<<<<< HEAD
+    const deleteVideo = (index) => {
+        setVideos((prevVideos) => prevVideos.filter((_, i) => i !== index));
+    };
+
+
+
+
+
+    return (
+        <div>
+
+            <h2> Video List</h2>
+            <VideoForm addVideo={addVideo} />
+            
+            <ul>
+                {videos.map((video, index) => (
+                    <li key={index}>
+
+<div>
+                        <iframe
+                            width="560"
+                            height="315"
+                            src={video.src}
+                            title={video.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        ></iframe>
+                        <p>{video.title}</p>
+                        <button onClick={() => deleteVideo(index)}>Excluir</button>
+                    </div>
+                        
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+=======
 			<ul>
 				{videos.map((video) => (
 					<li key={video.id}>
@@ -60,6 +99,7 @@ const Videos = () => {
 			</ul>
 		</div>
 	);
+>>>>>>> main
 };
 
 export default Videos;
