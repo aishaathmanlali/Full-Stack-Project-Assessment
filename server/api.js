@@ -65,4 +65,35 @@ router.post("/videos", async (req, res) => {
 	}
 });
 
+// Update video rating
+router.put("/videos/:id/rating", async (req, res) => {
+    const { id } = req.params;
+    const { rating } = req.body;
+
+    if (typeof rating !== "number" || rating < 0 || rating > 5) {
+        return res.status(400).json({ error: "Invalid rating value" });
+    }
+
+    try {
+        const selectResult = await db.query("SELECT * FROM videos WHERE id = $1", [id]);
+
+        if (selectResult.rows.length === 0) {
+            console.log("Video not found for ID:", id);
+            return res.status(404).json({ error: "Video not found" });
+        }
+
+        const updateResult = await db.query(
+            "UPDATE videos SET rating = $1 WHERE id = $2 RETURNING *",
+            [rating, id]
+        );
+
+        const updatedVideo = updateResult.rows[0];
+        res.status(200).json(updatedVideo);
+
+    } catch (error) {
+        console.error("Error updating video rating:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
 export default router;

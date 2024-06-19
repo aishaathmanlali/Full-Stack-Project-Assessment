@@ -5,6 +5,7 @@ import { connectDb, disconnectDb } from "./db.js";
 
 import app from "./app.js";
 
+
 // after configuring the routes we can now create the node server and start it up
 const server = http.createServer(app);
 const port = parseInt(process.env.PORT ?? "3000", 10);
