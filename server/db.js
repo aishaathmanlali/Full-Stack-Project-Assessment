@@ -9,10 +9,8 @@ const { Pool } = pg;
 
 const databaseUrl =
 	process.env.NODE_ENV === "test"
-		? process.env.TEST_DATABASE_URL ||
-			"postgres://fallback_username:fallback_password@localhost:5432/fallback_test_db"
-		: process.env.DATABASE_URL ||
-			"postgres://fallback_username:fallback_password@localhost:5432/fallback_db";
+		? process.env.TEST_DATABASE_URL
+		: process.env.DATABASE_URL;
 
 const pool =
 	databaseUrl &&
