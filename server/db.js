@@ -7,23 +7,31 @@ dotenv.config({ path: path.join(fileURLToPath(import.meta.url), "../.env") });
 
 const { Pool } = pg;
 
-const databaseUrl =
-	process.env.NODE_ENV === "test"
-		? process.env.TEST_DATABASE_URL
-		: process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL;
 
-const pool =
-	databaseUrl &&
-	new Pool({
-		connectionString: databaseUrl,
-		connectionTimeoutMillis: 5000,
-		ssl:
-			databaseUrl.includes("localhost") || databaseUrl.includes("flycast")
-				? false
-				: { rejectUnauthorized: false },
-	});
+if (!databaseUrl) {
+	throw new Error("DATABASE_URL is not defined in the environment variables");
+}
 
-export const connectDb = async () => {
+const pool = new Pool({
+	connectionString: databaseUrl,
+	connectionTimeoutMillis: 5000,
+	ssl:
+		databaseUrl.includes("localhost") || databaseUrl.includes("flycast")
+			? false
+			: { rejectUnauthorized: false },
+});
+
+pool.on("connect", () => {
+	console.log(`Connected to PostgreSQL database`);
+});
+
+pool.on("error", (err) => {
+	console.error("Unexpected error on idle client", err);
+	process.exit(-1);
+});
+
+const connectDb = async () => {
 	if (!pool) {
 		return;
 	}
@@ -40,23 +48,11 @@ export const connectDb = async () => {
 	}
 };
 
-export const disconnectDb = () => {
+const disconnectDb = () => {
 	if (!pool) {
 		return;
 	}
 	pool.end();
 };
 
-export const query = async (...args) => {
-	if (!pool) {
-		throw new Error("Database pool not initialized");
-	}
-	const client = await pool.connect();
-	try {
-		return await client.query(...args);
-	} finally {
-		client.release();
-	}
-};
-
-export default pool;
+export { connectDb, disconnectDb, pool as default };

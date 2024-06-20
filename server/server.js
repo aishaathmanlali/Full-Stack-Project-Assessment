@@ -1,19 +1,39 @@
-// server.js
-
-import http from "node:http";
+import express from "express";
 import { connectDb, disconnectDb } from "./db.js"; // Correct import statement
+import apiRouter from "./api.js";
 
-import app from "./app.js";
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const server = http.createServer(app);
-const port = parseInt(process.env.PORT ?? "3000", 10);
+// Middleware
+app.use(express.json());
 
-server.on("listening", () => {
-	const addr = server.address();
-	const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
-	console.log(`listening on: ${bind}`);
+// Routes
+app.use("/api", apiRouter);
+
+// Start server
+const startServer = async () => {
+	try {
+		await connectDb(); // Connect to database
+		app.listen(PORT, () => {
+			console.log(`Server is listening on port ${PORT}`);
+		});
+	} catch (error) {
+		console.error("Error starting server:", error);
+		process.exit(1); // Exit process on error
+	}
+};
+
+// Start server
+startServer();
+
+// Handle graceful shutdown
+process.on("SIGINT", async () => {
+	try {
+		await disconnectDb(); // Disconnect from database
+		process.exit(0);
+	} catch (error) {
+		console.error("Error shutting down server:", error);
+		process.exit(1);
+	}
 });
-
-process.on("SIGTERM", () => server.close(() => disconnectDb()));
-
-connectDb().then(() => server.listen(port));
