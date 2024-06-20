@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import VideoForm from "./VideoForm";
 
 const Videos = () => {
@@ -8,9 +8,11 @@ const Videos = () => {
 		const fetchVideos = async () => {
 			try {
 				const response = await fetch("/api/videos");
+				if (!response.ok) {
+					throw new Error(`Failed to fetch videos: ${response.status}`);
+				}
 				const data = await response.json();
 				setVideos(data.videos);
-				console.log(data);
 			} catch (error) {
 				console.error("Error fetching videos:", error);
 			}
@@ -48,58 +50,27 @@ const Videos = () => {
 			<h2>Video List</h2>
 			<VideoForm addVideo={addVideo} />
 
-<<<<<<< HEAD
-    const deleteVideo = (index) => {
-        setVideos((prevVideos) => prevVideos.filter((_, i) => i !== index));
-    };
-
-
-
-
-
-    return (
-        <div>
-
-            <h2> Video List</h2>
-            <VideoForm addVideo={addVideo} />
-            
-            <ul>
-                {videos.map((video, index) => (
-                    <li key={index}>
-
-<div>
-                        <iframe
-                            width="560"
-                            height="315"
-                            src={video.src}
-                            title={video.title}
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        ></iframe>
-                        <p>{video.title}</p>
-                        <button onClick={() => deleteVideo(index)}>Excluir</button>
-                    </div>
-                        
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-=======
 			<ul>
-				{videos.map((video) => (
-					<li key={video.id}>
-						<a href={video.src} target="_blank" rel="noopener noreferrer">
-							{video.title}
-						</a>
-						<button onClick={() => deleteVideo(video.id)}>Delete</button>
+				{videos.map((video, index) => (
+					<li key={index}>
+						<div>
+							<iframe
+								width="560"
+								height="315"
+								src={video.src}
+								title={video.title}
+								frameBorder="0"
+								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+								allowFullScreen
+							></iframe>
+							<p>{video.title}</p>
+							<button onClick={() => deleteVideo(video.id)}>Excluir</button>
+						</div>
 					</li>
 				))}
 			</ul>
 		</div>
 	);
->>>>>>> main
 };
 
 export default Videos;
