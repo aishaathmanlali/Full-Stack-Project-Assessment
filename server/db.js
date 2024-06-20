@@ -1,37 +1,33 @@
 import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import pg from "pg";
 
-dotenv.config({ path: path.join(fileURLToPath(import.meta.url), "../.env") });
-
-const { Pool } = pg;
-
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-	throw new Error("DATABASE_URL is not defined in the environment variables");
+if (!process.env.LAMBDA_TASK_ROOT) {
+	const __dirname = path.dirname(fileURLToPath(import.meta.url));
+	dotenv.config({ path: path.join(__dirname, "../.env") });
 }
 
-const pool = new Pool({
-	connectionString: databaseUrl,
-	connectionTimeoutMillis: 5000,
-	ssl:
-		databaseUrl.includes("localhost") || databaseUrl.includes("flycast")
-			? false
-			: { rejectUnauthorized: false },
-});
+import pg from "pg";
+const { Pool } = pg;
 
-pool.on("connect", () => {
-	console.log(`Connected to PostgreSQL database`);
-});
+// make sure we run automated tests against a different database to production
+const databaseUrl =
+	process.env.NODE_ENV == "test"
+		? process.env.TEST_DATABASE_URL
+		: process.env.DATABASE_URL;
+console.log(databaseUrl);
+const pool =
+	databaseUrl &&
+	new Pool({
+		connectionString: databaseUrl,
+		connectionTimeoutMillis: 5000,
+		ssl:
+			databaseUrl.includes("localhost") || databaseUrl.includes("flycast")
+				? false
+				: { rejectUnauthorized: false },
+	});
 
-pool.on("error", (err) => {
-	console.error("Unexpected error on idle client", err);
-	process.exit(-1);
-});
-
-const connectDb = async () => {
+export const connectDb = async () => {
 	if (!pool) {
 		return;
 	}
@@ -39,20 +35,26 @@ const connectDb = async () => {
 	let client;
 	try {
 		client = await pool.connect();
-		console.log(`Postgres connected to ${client.database}`);
 	} catch (err) {
-		console.error("Error connecting to Postgres:", err);
+		console.log(err);
 		throw err;
-	} finally {
-		client && client.release();
 	}
+	console.log(`Postgres connected to ${client.database}`);
+	client.release();
 };
 
-const disconnectDb = () => {
+export const disconnectDb = () => {
 	if (!pool) {
 		return;
 	}
 	pool.end();
 };
 
-export { connectDb, disconnectDb, pool as default };
+export default {
+	query: (...args) => {
+		if (!pool) {
+			return;
+		}
+		return pool.query.apply(pool, args);
+	},
+};
