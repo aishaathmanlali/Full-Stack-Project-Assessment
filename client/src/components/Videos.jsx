@@ -1,14 +1,20 @@
+// Videos.jsx
 import React, { useEffect, useState } from "react";
 import VideoForm from "./VideoForm";
 
 const Videos = () => {
 	const [videos, setVideos] = useState([]);
+	const [order, setOrder] = useState(""); // Added state for ordering
 	const [error, setError] = useState(null);
 
 	useEffect(() => {
 		const fetchVideos = async () => {
 			try {
-				const response = await fetch("/api/videos");
+				let url = "/api/videos";
+				if (order) {
+					url += `?order=${order}`;
+				}
+				const response = await fetch(url);
 				if (!response.ok) {
 					throw new Error(`Failed to fetch videos: ${response.status}`);
 				}
@@ -21,7 +27,7 @@ const Videos = () => {
 		};
 
 		fetchVideos();
-	}, []);
+	}, [order]); // Added order as a dependency to refetch videos on change
 
 	const addVideo = (video) => {
 		setVideos((prevVideos) => [...prevVideos, video]);
@@ -103,6 +109,17 @@ const Videos = () => {
 			<h2>Video List</h2>
 			{error && <p style={{ color: "red" }}>{error}</p>}
 			<VideoForm addVideo={addVideo} />
+
+			<label htmlFor="order">Order By Rating: </label>
+			<select
+				id="order"
+				value={order}
+				onChange={(e) => setOrder(e.target.value)}
+			>
+				<option value="">Default (by ID)</option>
+				<option value="asc">Ascending</option>
+				<option value="desc">Descending</option>
+			</select>
 
 			<ul>
 				{videos.map((video, index) => (
