@@ -1,22 +1,47 @@
-import "dotenv/config";
-
-import http from "node:http";
-import { connectDb, disconnectDb } from "./db.js";
-
-import app from "./app.js";
+import express from "express";
+import { connectDb, disconnectDb } from "./db.js"; // Correct import statement
+import apiRouter from "./api.js";
 
 
-// after configuring the routes we can now create the node server and start it up
-const server = http.createServer(app);
-const port = parseInt(process.env.PORT ?? "3000", 10);
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-server.on("listening", () => {
-	const addr = server.address();
-	const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
-	console.log(`listening on: ${bind}`);
+// Middleware
+app.use(express.json());
+
+// Routes
+app.use("/api", apiRouter);
+
+app.use((req, res, next) => {
+	res.setHeader("Access-Control-Allow-Origin", "*");
+	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+	next();
 });
 
-process.on("SIGTERM", () => server.close(() => disconnectDb()));
+// Start server
+const startServer = async () => {
+	try {
+		await connectDb(); // Connect to database
+		app.listen(PORT, () => {
+			console.log(`Server is listening on port ${PORT}`);
+		});
+	} catch (error) {
+		console.error("Error starting server:", error);
+		process.exit(1); // Exit process on error
+	}
+};
 
-connectDb().then(() => server.listen(port));
+// Start server
+startServer();
 
+// Handle graceful shutdown
+process.on("SIGINT", async () => {
+	try {
+		await disconnectDb(); // Disconnect from database
+		process.exit(0);
+	} catch (error) {
+		console.error("Error shutting down server:", error);
+		process.exit(1);
+	}
+});

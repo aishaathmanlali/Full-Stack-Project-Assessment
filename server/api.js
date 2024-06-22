@@ -1,19 +1,17 @@
 import { Router } from "express";
-import db from "./db.js";
-import { v4 as uuidv4 } from "uuid";
+import pool from "./db.js";
 
 const router = Router();
 
-//Get all videos
+// Get all videos
 router.get("/videos", async (_, res) => {
-	console.log("api videos");
-	db.query("SELECT * FROM videos")
-		.then((result) => {
-			res.status(200).json({ videos: result.rows });
-		})
-		.catch((error) => {
-			console.log(error);
-		});
+	try {
+		const result = await pool.query("SELECT * FROM videos");
+		res.status(200).json({ videos: result.rows });
+	} catch (error) {
+		console.error("Error fetching videos:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
 });
 
 // Delete a specific video by ID
@@ -21,19 +19,12 @@ router.delete("/videos/:id", async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		const selectResult = await db.query("SELECT * FROM videos WHERE id = $1", [
+		const deleteResult = await pool.query("DELETE FROM videos WHERE id = $1", [
 			id,
 		]);
-		//checks if video doesn't exist
-		if (selectResult.rows.length === 0) {
-			console.log("Video not found for ID:", id);
+		if (deleteResult.rowCount === 0) {
 			return res.status(404).json({ error: "Video not found" });
 		}
-
-		// Delete the video
-		const deleteResult = await db.query("DELETE FROM videos WHERE id = $1", [
-			id,
-		]);
 		res.status(204).send();
 	} catch (error) {
 		console.error("Error deleting video:", error);
@@ -45,20 +36,18 @@ router.delete("/videos/:id", async (req, res) => {
 router.post("/videos", async (req, res) => {
 	const { title, src } = req.body;
 
-	if (!title && !src) {
+	if (!title || !src) {
 		return res.status(400).json({ error: "Missing required video data" });
 	}
 
 	try {
-		const insertResult = await db.query(
+		const insertResult = await pool.query(
 			"INSERT INTO videos (title, src) VALUES ($1, $2) RETURNING *",
 			[title, src]
 		);
 
 		const newVideo = insertResult.rows[0];
-		console.log(newVideo);
 		res.status(201).json(newVideo);
-
 	} catch (error) {
 		console.error("Error adding new video:", error);
 		res.status(500).json({ error: "Internal Server Error" });
@@ -67,33 +56,32 @@ router.post("/videos", async (req, res) => {
 
 // Update video rating
 router.put("/videos/:id/rating", async (req, res) => {
-    const { id } = req.params;
-    const { rating } = req.body;
+	const { id } = req.params;
+	const { rating } = req.body;
 
-    if (typeof rating !== "number" || rating < 0 || rating > 5) {
-        return res.status(400).json({ error: "Invalid rating value" });
-    }
+	if (typeof rating !== "number" || rating < 0) {
+		return res.status(400).json({ error: "Invalid rating value" });
+	}
 
-    try {
-        const selectResult = await db.query("SELECT * FROM videos WHERE id = $1", [id]);
+	console.log(`Updating rating for video ID ${id} to new rating ${rating}`); // Debug log
 
-        if (selectResult.rows.length === 0) {
-            console.log("Video not found for ID:", id);
-            return res.status(404).json({ error: "Video not found" });
-        }
+	try {
+		const updateResult = await pool.query(
+			"UPDATE videos SET rating = $1 WHERE id = $2 RETURNING *",
+			[rating, id]
+		);
 
-        const updateResult = await db.query(
-            "UPDATE videos SET rating = $1 WHERE id = $2 RETURNING *",
-            [rating, id]
-        );
+		if (updateResult.rows.length === 0) {
+			return res.status(404).json({ error: "Video not found" });
+		}
 
-        const updatedVideo = updateResult.rows[0];
-        res.status(200).json(updatedVideo);
-
-    } catch (error) {
-        console.error("Error updating video rating:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
+		const updatedVideo = updateResult.rows[0];
+		console.log(`Updated video in DB:`, updatedVideo); // Debug log
+		res.status(200).json(updatedVideo);
+	} catch (error) {
+		console.error("Error updating video rating:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
 });
 
 export default router;

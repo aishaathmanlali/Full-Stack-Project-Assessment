@@ -26,7 +26,6 @@ const pool =
 				? false
 				: { rejectUnauthorized: false },
 	});
-	
 
 export const connectDb = async () => {
 	if (!pool) {
