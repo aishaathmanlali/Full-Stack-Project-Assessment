@@ -4,9 +4,19 @@ import pool from "./db.js";
 const router = Router();
 
 // Get all videos
-router.get("/videos", async (_, res) => {
+router.get("/videos", async (req, res) => {
+	const { order } = req.query;
+	let query = "SELECT * FROM videos";
+	if (order === "asc") {
+		query += " ORDER BY rating ASC";
+	} else if (order === "desc") {
+		query += " ORDER BY rating DESC";
+	} else {
+		query += " ORDER BY id";
+	}
+
 	try {
-		const result = await pool.query("SELECT * FROM videos");
+		const result = await pool.query(query);
 		res.status(200).json({ videos: result.rows });
 	} catch (error) {
 		console.error("Error fetching videos:", error);
