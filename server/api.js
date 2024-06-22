@@ -1,5 +1,5 @@
 import { Router } from "express";
-import pool from "./db.js"; // Ensure correct import
+import pool from "./db.js";
 
 const router = Router();
 
@@ -59,9 +59,11 @@ router.put("/videos/:id/rating", async (req, res) => {
 	const { id } = req.params;
 	const { rating } = req.body;
 
-	if (typeof rating !== "number" || rating < 0 || rating > 5) {
+	if (typeof rating !== "number" || rating < 0) {
 		return res.status(400).json({ error: "Invalid rating value" });
 	}
+
+	console.log(`Updating rating for video ID ${id} to new rating ${rating}`); // Debug log
 
 	try {
 		const updateResult = await pool.query(
@@ -74,6 +76,7 @@ router.put("/videos/:id/rating", async (req, res) => {
 		}
 
 		const updatedVideo = updateResult.rows[0];
+		console.log(`Updated video in DB:`, updatedVideo); // Debug log
 		res.status(200).json(updatedVideo);
 	} catch (error) {
 		console.error("Error updating video rating:", error);
